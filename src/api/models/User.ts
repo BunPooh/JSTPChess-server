@@ -21,9 +21,6 @@ export class User {
     @Column()
     public email: string;
 
-    @OneToMany(type => Pet, pet => pet.user)
-    public pets: Pet[];
-
     public toString(): string {
         return `${this.firstName} ${this.lastName} (${this.email})`;
     }

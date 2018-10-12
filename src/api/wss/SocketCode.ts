@@ -15,6 +15,5 @@ export const enum ChessboardRPC {
      * InGame commands
      */
     CLIENT_MOVE_PIECE = "client/move_piece",
-    SERVER_MOVE_PIECE = "server/move_piece",
-    SERVER_TURN_CHANGE = "server/turn_change"
+    SERVER_GAME_UPDATE = "server/game_update"
 }

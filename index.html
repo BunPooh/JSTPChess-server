@@ -13,15 +13,32 @@
         console.log("Saved message received back: ", message);
     });
 
+    socket.on("game_update", function (message) {
+        console.log("update", message);
+    });
+
+    socket.on("start_game", function () {
+        console.log("start");
+    });
+
     function onClick() {
-        socket.emit("save", { text: "Hello this is message" });
+        socket.emit("save", {
+            text: "Hello this is message"
+        });
     }
+
+    function onStart() {
+        socket.emit("join_game");
+    }
+
 </script>
 
 <body>
 
     Watch console for events.<br />
     <button onclick="onClick()">Click to send a save event to the /messages namespace.</button>
+
+    <button onclick="onStart()">Start</button>
 
 </body>
 

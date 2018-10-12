@@ -1,3 +1,5 @@
+import * as chess from 'chess.js';
+import { ChessInstance } from 'chessjs';
 import {
     ConnectedSocket, MessageBody, OnConnect, OnDisconnect, OnMessage, SocketController
 } from 'socket-controllers';
@@ -11,6 +13,8 @@ import { ChessboardRPC } from '../wss/SocketCode';
 @SocketController()
 export class MessageController {
     constructor(private userService: UserService) {}
+
+    private game: ChessInstance;
 
     @OnConnect()
     public connection(@ConnectedSocket() socket: Socket) {
@@ -32,13 +36,19 @@ export class MessageController {
         console.log("client disconnected");
     }
 
+    @OnMessage("join_game")
+    public init_game(@ConnectedSocket() socket: Socket) {
+        socket.emit("start_game");
+        this.game = new chess();
+        socket.emit("game_update");
+    }
+
     @OnMessage("save")
     public save(@ConnectedSocket() socket: any, @MessageBody() message: any) {
         console.log("received message:", message);
         console.log(
             "setting id to the message and sending it back to the client"
         );
-
         console.log(this.userService);
 
         message.id = 1;
