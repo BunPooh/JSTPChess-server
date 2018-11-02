@@ -6,6 +6,7 @@ import { banner } from './lib/banner';
 import { Logger } from './lib/logger';
 import { eventDispatchLoader } from './loaders/eventDispatchLoader';
 import { expressLoader } from './loaders/expressLoader';
+import { fireBaseLoader } from './loaders/fireBaseLoader';
 import { homeLoader } from './loaders/homeLoader';
 import { iocLoader } from './loaders/iocLoader';
 import { monitorLoader } from './loaders/monitorLoader';
@@ -38,7 +39,8 @@ bootstrapMicroframework({
         wssLoader,
         monitorLoader,
         homeLoader,
-        publicLoader
+        publicLoader,
+        fireBaseLoader
     ]
 })
     .then(() => banner(log))

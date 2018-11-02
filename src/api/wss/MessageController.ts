@@ -1,34 +1,35 @@
-import * as chess from 'chess.js';
-import { ChessInstance } from 'chessjs';
+import * as admin from 'firebase-admin';
 import {
-    ConnectedSocket, MessageBody, OnConnect, OnDisconnect, OnMessage, SocketController
+    ConnectedSocket, EmitOnFail, EmitOnSuccess, MessageBody, OnConnect, OnDisconnect, OnMessage,
+    SocketController, SocketQueryParam
 } from 'socket-controllers';
 import { Socket } from 'socket.io';
+import { Container } from 'typedi';
 import { v4 as uuidv4 } from 'uuid';
 
 import { User } from '../models/User';
+import { RoomService } from '../services/RoomService';
 import { UserService } from '../services/UserService';
 import { ChessboardRPC } from '../wss/SocketCode';
 
 @SocketController()
 export class MessageController {
+    private roomService = new RoomService();
+    private user;
+
     constructor(private userService: UserService) {}
 
-    private game: ChessInstance;
-
     @OnConnect()
-    public connection(@ConnectedSocket() socket: Socket) {
-        console.log("client connected");
-        const user = new User();
-
-        user.id = uuidv4();
-        user.firstName = "test";
-        user.lastName = "test";
-        user.email = "sascha.braun@epitech.eu";
-
-        this.userService.create(user);
-
-        socket.emit(ChessboardRPC.SERVER_INITIALIZE_PLAYER, user.id);
+    public connection(
+        @ConnectedSocket() socket: Socket,
+        @SocketQueryParam("token") token: string
+    ) {
+        this.user = new User();
+        const admin = Container.get("firebase_admin") as admin.app.App;
+        admin
+            .auth()
+            .verifyIdToken(token)
+            .then(decodedToken => (this.user.id = decodedToken.uid));
     }
 
     @OnDisconnect()
@@ -36,22 +37,34 @@ export class MessageController {
         console.log("client disconnected");
     }
 
-    @OnMessage("join_game")
-    public init_game(@ConnectedSocket() socket: Socket) {
-        socket.emit("start_game");
-        this.game = new chess();
-        socket.emit("game_update");
+    @OnMessage("@@rooms/join")
+    @EmitOnSuccess("@@rooms/join")
+    public join_game(
+        @ConnectedSocket() socket: Socket,
+        @MessageBody() roomId: string
+    ) {
+        const room = this.roomService.get(roomId);
+        room.opponent = this.user.id;
+        return {
+            chessBoard: room.chessBoard.ascii()
+        };
     }
 
-    @OnMessage("save")
-    public save(@ConnectedSocket() socket: any, @MessageBody() message: any) {
-        console.log("received message:", message);
-        console.log(
-            "setting id to the message and sending it back to the client"
-        );
-        console.log(this.userService);
+    @OnMessage("@@rooms/create")
+    @EmitOnSuccess("@@rooms/create")
+    @EmitOnFail("user_missing")
+    public create_game(@ConnectedSocket() socket: Socket) {
+        const id = this.roomService.createRoom(this.user);
+        return { roomId: id };
+    }
 
-        message.id = 1;
-        socket.emit("message_saved", message);
+    @OnMessage("@@rooms/list")
+    @EmitOnSuccess("@@rooms/list")
+    public list_room(@ConnectedSocket() socket: Socket) {
+        const roomsList = this.roomService.getList();
+        console.log("roomList");
+        return {
+            rooms: roomsList
+        };
     }
 }

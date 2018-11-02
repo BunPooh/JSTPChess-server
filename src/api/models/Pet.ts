@@ -1,8 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
-import { User } from './User';
-
 @Entity()
 export class Pet {
     @PrimaryGeneratedColumn("uuid")
@@ -15,12 +13,6 @@ export class Pet {
     @IsNotEmpty()
     @Column()
     public age: number;
-
-    @Column({
-        name: "user_id",
-        nullable: true
-    })
-    public userId: number;
 
     public toString(): string {
         return `${this.name}`;
