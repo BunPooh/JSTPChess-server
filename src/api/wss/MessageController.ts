@@ -16,6 +16,7 @@ import { ChessboardRPC } from '../wss/SocketCode';
 export class MessageController {
     private roomService = new RoomService();
     private user;
+    private curRoom;
 
     constructor(private userService: UserService) {}
 
@@ -45,26 +46,33 @@ export class MessageController {
     ) {
         const room = this.roomService.get(roomId);
         room.opponent = this.user.id;
+        this.curRoom = room;
         return {
             chessBoard: room.chessBoard.ascii()
         };
     }
 
     @OnMessage("@@rooms/create")
-    @EmitOnSuccess("@@rooms/create")
-    @EmitOnFail("user_missing")
     public create_game(@ConnectedSocket() socket: Socket) {
         const id = this.roomService.createRoom(this.user);
-        return { roomId: id };
+        this.curRoom = this.roomService.get(id);
+        socket.emit("@@rooms/create", this.curRoom);
     }
 
     @OnMessage("@@rooms/list")
-    @EmitOnSuccess("@@rooms/list")
     public list_room(@ConnectedSocket() socket: Socket) {
         const roomsList = this.roomService.getList();
-        console.log("roomList");
-        return {
-            rooms: roomsList
-        };
+        socket.emit("@@rooms/list", roomsList);
+    }
+
+    @OnMessage("@@chess/move")
+    public chess_move(@ConnectedSocket() socket: Socket) {
+        socket.emit("@@chess/move", this.curRoom);
+    }
+
+    @OnMessage("@@chess/update")
+    public chess_update(@ConnectedSocket() socket: Socket) {
+        this.curRoom = this.roomService.get(this.curRoom.id);
+        socket.emit("@@chess/update", this.curRoom);
     }
 }
