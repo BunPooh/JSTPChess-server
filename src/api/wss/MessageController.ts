@@ -65,14 +65,24 @@ export class MessageController {
         socket.emit("@@rooms/list", roomsList);
     }
 
+    @OnMessage("@@rooms/leave")
+    public leave_room(@ConnectedSocket() socket: Socket) {
+        const roomsList = this.roomService.leaveRoom(this.curRoom, this.user);
+    }
+
     @OnMessage("@@chess/move")
-    public chess_move(@ConnectedSocket() socket: Socket) {
-        socket.emit("@@chess/move", this.curRoom);
+    public chess_move(
+        @ConnectedSocket() socket: Socket,
+        @MessageBody() from: string,
+        @MessageBody() to: string
+    ) {
+        this.curRoom.chess.move({ from, to });
+        socket.emit("@@chess/move", this.curRoom.chess.ascii());
     }
 
     @OnMessage("@@chess/update")
     public chess_update(@ConnectedSocket() socket: Socket) {
         this.curRoom = this.roomService.get(this.curRoom.id);
-        socket.emit("@@chess/update", this.curRoom);
+        socket.emit("@@chess/update", this.curRoom.chess.ascii());
     }
 }

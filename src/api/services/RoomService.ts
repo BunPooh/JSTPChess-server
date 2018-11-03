@@ -24,6 +24,18 @@ export class RoomService {
         return id;
     }
 
+    public leaveRoom(room: Room, user: User) {
+        if (room.creator === user) {
+            room.creator = null;
+        } else if (room.opponent === user) {
+            room.creator = null;
+        }
+
+        if (room.creator === null && room.opponent === null) {
+            this.listRoom.delete(room.id);
+        }
+    }
+
     public get(id: string): Room {
         return this.listRoom.get(id);
     }
