@@ -1,3 +1,4 @@
+import { Chess } from 'chess.js';
 import * as admin from 'firebase-admin';
 import {
     ConnectedSocket, EmitOnFail, EmitOnSuccess, MessageBody, OnConnect, OnDisconnect, OnMessage,
@@ -9,14 +10,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { User } from '../models/User';
 import { RoomService } from '../services/RoomService';
+import { SocketService } from '../services/SocketService';
 import { UserService } from '../services/UserService';
 import { ChessboardRPC } from '../wss/SocketCode';
 
 @SocketController()
 export class MessageController {
     private roomService = new RoomService();
+    private socketService = new SocketService();
     private user;
     private curRoom;
+    private chessInstance = new Chess();
 
     constructor(private userService: UserService) {}
 
@@ -30,7 +34,13 @@ export class MessageController {
         admin
             .auth()
             .verifyIdToken(token)
-            .then(decodedToken => (this.user.id = decodedToken.uid));
+            .then(
+                decodedToken =>
+                    (this.user.uid = this.socketService.newController(
+                        decodedToken.uid,
+                        socket
+                    ))
+            );
     }
 
     @OnDisconnect()
@@ -45,18 +55,17 @@ export class MessageController {
         @MessageBody() roomId: string
     ) {
         const room = this.roomService.get(roomId);
-        room.opponent = this.user.id;
+        room.opponent = this.user.uid;
         this.curRoom = room;
-        return {
-            chessBoard: room.chessBoard.ascii()
-        };
+        this.chess_update(this.socketService.get(this.curRoom.opponent));
+        this.chess_update(this.socketService.get(this.curRoom.creator));
     }
 
     @OnMessage("@@rooms/create")
     public create_game(@ConnectedSocket() socket: Socket) {
         const id = this.roomService.createRoom(this.user);
         this.curRoom = this.roomService.get(id);
-        socket.emit("@@rooms/create", this.curRoom);
+        this.room_set(socket);
     }
 
     @OnMessage("@@rooms/list")
@@ -76,13 +85,20 @@ export class MessageController {
         @MessageBody() from: string,
         @MessageBody() to: string
     ) {
-        this.curRoom.chess.move({ from, to });
-        socket.emit("@@chess/move", this.curRoom.chess.ascii());
+        this.chessInstance.load_pgn(this.curRoom.chessBoard);
+        this.chessInstance.move(from + to);
+        this.curRoom.chessBoard = this.chessInstance.pgn();
+        this.chess_update(this.socketService.get(this.curRoom.opponent));
+        this.chess_update(this.socketService.get(this.curRoom.creator));
     }
 
     @OnMessage("@@chess/update")
     public chess_update(@ConnectedSocket() socket: Socket) {
         this.curRoom = this.roomService.get(this.curRoom.id);
-        socket.emit("@@chess/update", this.curRoom.chess.ascii());
+        this.room_set(socket);
+    }
+
+    public room_set(@ConnectedSocket() socket: Socket) {
+        socket.emit("@@room/set", this.curRoom);
     }
 }

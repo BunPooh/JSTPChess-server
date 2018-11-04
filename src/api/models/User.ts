@@ -4,7 +4,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class User {
     @PrimaryGeneratedColumn("uuid")
-    public id: string;
+    public uid: string;
 
     @IsNotEmpty()
     @Column({ name: "first_name" })

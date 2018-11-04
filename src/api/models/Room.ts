@@ -6,9 +6,9 @@ export class Room {
     public id: string;
     public creator: User;
     public opponent: User;
-    public chessBoard: chess.ChessInstance;
+    public chessBoard: string;
 
     public toString(): string {
-        return `${this.creator} ${this.opponent} (${this.chessBoard.ascii})`;
+        return `${this.creator} ${this.opponent} (${this.chessBoard})`;
     }
 }

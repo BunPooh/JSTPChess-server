@@ -17,7 +17,7 @@ export class RoomService {
         const id = uuidv4();
 
         const room = new Room();
-        room.chessBoard = new chess.Chess();
+        room.chessBoard = new chess.Chess().pgn();
         room.id = id;
         room.creator = user;
         this.listRoom.set(id, room);
