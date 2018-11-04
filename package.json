@@ -13,7 +13,7 @@
     "heroku-postbuild": "npm run build"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": "=8.9.4"
   },
   "repository": "git+ssh://git@github.com/w3tec/express-typescript-boilerplate.git",
   "keywords": [
