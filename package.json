@@ -9,7 +9,8 @@
     "build": "npm start build",
     "presetup": "yarn install",
     "setup": "npm start config && npm start setup.script",
-    "lint": "npm start lint"
+    "lint": "npm start lint",
+    "heroku-postbuild": "npm run build"
   },
   "engines": {
     "node": ">=8.0.0"
