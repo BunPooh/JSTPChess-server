@@ -45,6 +45,10 @@ export class MessageController {
 
     @OnDisconnect()
     public disconnect(@ConnectedSocket() socket: Socket) {
+        if (this.curRoom !== undefined) {
+            this.roomService.leaveRoom(this.curRoom, this.user);
+        }
+        this.socketService.removeController(this.user.uid);
         console.log("client disconnected");
     }
 
@@ -91,12 +95,11 @@ export class MessageController {
         this.chessInstance.load_pgn(this.curRoom.chessBoard);
         this.chessInstance.move(from + to);
         this.curRoom.chessBoard = this.chessInstance.pgn();
-        this.chess_update(this.socketService.get(this.curRoom.opponent));
-        this.chess_update(this.socketService.get(this.curRoom.creator));
+        this.room_set(this.socketService.get(this.curRoom.opponent));
+        this.room_set(this.socketService.get(this.curRoom.creator));
     }
 
-    @OnMessage("@@chess/update")
-    public chess_update(@ConnectedSocket() socket: Socket) {
+    public chess_update(socket: Socket) {
         this.curRoom = this.roomService.get(this.curRoom.id);
         this.room_set(socket);
     }
