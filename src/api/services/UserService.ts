@@ -20,9 +20,9 @@ export class UserService {
         return this.userRepository.find({ relations: ["pets"] });
     }
 
-    public findOne(id: string): Promise<User | undefined> {
+    public findOne(uid: string): Promise<User | undefined> {
         this.log.info("Find all users");
-        return this.userRepository.findOne({ id });
+        return this.userRepository.findOne({ uid });
     }
 
     public async create(user: User): Promise<User> {
@@ -34,7 +34,7 @@ export class UserService {
 
     public update(id: string, user: User): Promise<User> {
         this.log.info("Update a user");
-        user.id = id;
+        user.uid = id;
         return this.userRepository.save(user);
     }
 

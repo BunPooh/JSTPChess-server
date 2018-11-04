@@ -26,8 +26,7 @@
   ],
   "homepage": "https://github.com/w3tec/express-typescript-boilerplate#readme",
   "author": "w3tec.ch <info@w3tec.ch>",
-  "contributors": [
-    {
+  "contributors": [{
       "name": "David Weber",
       "email": "david.weber@w3tec.ch",
       "url": "https://github.com/dweber019"
