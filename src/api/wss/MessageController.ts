@@ -45,6 +45,10 @@ export class MessageController {
 
     @OnDisconnect()
     public disconnect(@ConnectedSocket() socket: Socket) {
+        if (this.curRoom !== undefined) {
+            this.roomService.leaveRoom(this.curRoom, this.user);
+        }
+        this.socketService.removeController(this.user.uid);
         console.log("client disconnected");
     }
 
@@ -63,9 +67,11 @@ export class MessageController {
 
     @OnMessage("@@rooms/create")
     public create_game(@ConnectedSocket() socket: Socket) {
-        const id = this.roomService.createRoom(this.user);
-        this.curRoom = this.roomService.get(id);
-        this.room_set(socket);
+        if (this.curRoom === undefined) {
+            const id = this.roomService.createRoom(this.user);
+            this.curRoom = this.roomService.get(id);
+            this.room_set(socket);
+        }
     }
 
     @OnMessage("@@rooms/list")
@@ -76,7 +82,8 @@ export class MessageController {
 
     @OnMessage("@@rooms/leave")
     public leave_room(@ConnectedSocket() socket: Socket) {
-        const roomsList = this.roomService.leaveRoom(this.curRoom, this.user);
+        this.roomService.leaveRoom(this.curRoom, this.user);
+        socket.emit("@@rooms/leave");
     }
 
     @OnMessage("@@chess/move")
@@ -88,17 +95,16 @@ export class MessageController {
         this.chessInstance.load_pgn(this.curRoom.chessBoard);
         this.chessInstance.move(from + to);
         this.curRoom.chessBoard = this.chessInstance.pgn();
-        this.chess_update(this.socketService.get(this.curRoom.opponent));
-        this.chess_update(this.socketService.get(this.curRoom.creator));
+        this.room_set(this.socketService.get(this.curRoom.opponent));
+        this.room_set(this.socketService.get(this.curRoom.creator));
     }
 
-    @OnMessage("@@chess/update")
-    public chess_update(@ConnectedSocket() socket: Socket) {
+    public chess_update(socket: Socket) {
         this.curRoom = this.roomService.get(this.curRoom.id);
         this.room_set(socket);
     }
 
-    public room_set(@ConnectedSocket() socket: Socket) {
-        socket.emit("@@room/set", this.curRoom);
+    public room_set(socket: Socket) {
+        socket.emit("@@rooms/set", this.curRoom);
     }
 }

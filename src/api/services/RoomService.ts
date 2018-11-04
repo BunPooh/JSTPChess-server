@@ -26,12 +26,12 @@ export class RoomService {
 
     public leaveRoom(room: Room, user: User) {
         if (room.creator === user) {
-            room.creator = null;
+            room.creator = undefined;
         } else if (room.opponent === user) {
-            room.creator = null;
+            room.creator = undefined;
         }
 
-        if (room.creator === null && room.opponent === null) {
+        if (room.creator === undefined && room.opponent === undefined) {
             this.listRoom.delete(room.id);
         }
     }
